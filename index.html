@@ -475,6 +475,7 @@
             <div class="section-heading">উপলব্ধ চ্যানেলসমূহ</div>
             <div class="channel-grid" id="channelGrid"></div>
         </div>
+
     </div>
 
     <footer class="app-footer">
@@ -482,10 +483,10 @@
     </footer>
 
     <script>
-        // আপনার নতুন রিপোজিটরি নেম 'PlayCast' অনুযায়ী লিংকগুলো ফিক্স করা হলো
+        // স্ক্রিনশট অনুযায়ী আপনার ফিক্সড প্লেলিস্ট ফাইল নেম সেট করা হলো
         const playlists = {
-            playlist1: 'https://raw.githubusercontent.com/junaidthakur/PlayCast/main/aynaott.m3u',
-            playlist2: 'https://raw.githubusercontent.com/junaidthakur/PlayCast/main/Sports-138.m3u'
+            playlist1: 'https://raw.githubusercontent.com/junaidthakur/PlayCast/main/media1.m3u',
+            playlist2: 'https://raw.githubusercontent.com/junaidthakur/PlayCast/main/media2.m3u'
         };
 
         let channelsList = [];
@@ -537,7 +538,7 @@
             grid.innerHTML = '';
             
             if(channels.length === 0) {
-                grid.innerHTML = "<p style='text-align: center; grid-column: 1/-1; color: var(--text-muted); padding: 15px;'>কোনো চ্যানেল পাওয়া যায়নি!</p>";
+                grid.innerHTML = "<p style='text-align: center; grid-column: 1/-1; color: var(--text-muted); padding: 25px;'>কোনো চ্যানেল পাওয়া যায়নি!</p>";
                 return;
             }
 
@@ -589,4 +590,11 @@
 
         function searchChannels() {
             const query = document.getElementById('searchBox').value.toLowerCase();
-            const filtered = channelsList.f
+            const filtered = channelsList.filter(ch => ch.name.toLowerCase().includes(query));
+            displayChannels(filtered);
+        }
+
+        window.onload = () => loadPlaylist(playlists.playlist1);
+    </script>
+</body>
+</html>
