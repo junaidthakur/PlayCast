@@ -501,7 +501,6 @@
     </footer>
 
     <script>
-        // গিটহাব পেজেস-এর ইন্টারনাল পাথ ডিরেক্টরি সেটআপ (CORS ফিক্সড)
         const playlists = {
             playlist1: 'media1.m3u',
             playlist2: 'media2.m3u'
@@ -524,7 +523,7 @@
                 channelsList = []; 
                 parseM3U(data);
             } catch (err) {
-                grid.innerHTML = "<p style='color:#ff2a5f; text-align:center; grid-column:1/-1; padding: 15px;'><i class='fa-solid fa-circle-exclamation'></i> প্লেলিস্ট বা চ্যানেল খুঁজে পাওয়া যায়নি! অনুগ্রহ করে মিডিয়া ফাইল চেক করুন।</p>";
+                grid.innerHTML = "<p style='color:#ff2a5f; text-align:center; grid-column:1/-1; padding: 15px;'><i class='fa-solid fa-circle-exclamation'></i> প্লেলিস্ট বা চ্যানেল খুঁজে পাওয়া যায়নি!</p>";
             }
         }
 
@@ -549,7 +548,7 @@
                 }
             }
             displayChannels(channelsList);
-            if(channelsList.length > 0) playStream(0);
+            if(channelsList.length > 0) playStream(0, false);
         }
 
         function displayChannels(channels) {
@@ -566,17 +565,17 @@
                 const card = document.createElement('div');
                 card.className = 'channel-card';
                 card.setAttribute('id', 'ch-' + realIndex);
-                card.onclick = () => playStream(realIndex);
+                card.onclick = () => playStream(realIndex, true); // ম্যানুয়ালি ক্লিক করলেই ট্রিকার হবে
                 
                 card.innerHTML = `
                     <img src="${ch.logo}" onerror="this.src='https://via.placeholder.com/150x90?text=${encodeURIComponent(ch.name)}'">
                     <span>${ch.name}</span>
                 `;
-                grid.appendChild(card);
+                grid.appendChild(grid.appendChild(card));
             });
         }
 
-        function playStream(index) {
+        function playStream(index, triggerAd = false) {
             const channel = channelsList[index];
             if (!channel) return;
 
@@ -597,6 +596,11 @@
             } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                 video.src = channel.url;
             }
+
+            // চ্যানেল পাল্টালে Adsterra Popunder রান করার স্ক্রিপ্ট ট্রিকার
+            if (triggerAd) {
+                executePopunder();
+            }
         }
 
         function switchPlaylist(key) {
@@ -615,5 +619,17 @@
 
         window.onload = () => loadPlaylist(playlists.playlist1);
     </script>
+
+    <div id="popunder-holder" style="display:none;">
+        <script src="https://pl29568950.effectivecpmnetwork.com/d7/48/45/d74845eaacf39a960a210fe6ab2631f7.js"></script>
+    </div>
+
+    <script>
+        function executePopunder() {
+            // Adsterra-র নেটওয়ার্ক ফাইলটি রান করার লজিক
+            console.log("Popunder Triggered via Channel Switch");
+        }
+    </script>
+
 </body>
 </html>
