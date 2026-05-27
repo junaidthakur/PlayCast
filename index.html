@@ -501,10 +501,10 @@
     </footer>
 
     <script>
-        // প্লেলিস্ট ফাইল নেম সেটিংস
+        // গিটহাব পেজেস-এর ইন্টারনাল পাথ ডিরেক্টরি সেটআপ (CORS ফিক্সড)
         const playlists = {
-            playlist1: 'https://raw.githubusercontent.com/junaidthakur/PlayCast/main/media1.m3u',
-            playlist2: 'https://raw.githubusercontent.com/junaidthakur/PlayCast/main/media2.m3u'
+            playlist1: 'media1.m3u',
+            playlist2: 'media2.m3u'
         };
 
         let channelsList = [];
@@ -519,11 +519,12 @@
             
             try {
                 const response = await fetch(url);
+                if(!response.ok) throw new Error("HTTP error");
                 const data = await response.text();
                 channelsList = []; 
                 parseM3U(data);
             } catch (err) {
-                grid.innerHTML = "<p style='color:#ff2a5f; text-align:center; grid-column:1/-1; padding: 15px;'><i class='fa-solid fa-circle-exclamation'></i> প্লেলিস্ট লোড করা যায়নি!</p>";
+                grid.innerHTML = "<p style='color:#ff2a5f; text-align:center; grid-column:1/-1; padding: 15px;'><i class='fa-solid fa-circle-exclamation'></i> প্লেলিস্ট বা চ্যানেল খুঁজে পাওয়া যায়নি! অনুগ্রহ করে মিডিয়া ফাইল চেক করুন।</p>";
             }
         }
 
@@ -608,4 +609,11 @@
 
         function searchChannels() {
             const query = document.getElementById('searchBox').value.toLowerCase();
-            const filtered = channelsList.filter(ch => ch
+            const filtered = channelsList.filter(ch => ch.name.toLowerCase().includes(query));
+            displayChannels(filtered);
+        }
+
+        window.onload = () => loadPlaylist(playlists.playlist1);
+    </script>
+</body>
+</html>
