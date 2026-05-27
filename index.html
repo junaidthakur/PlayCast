@@ -114,13 +114,13 @@
 
         .top-banner-ad {
             height: auto;
-            min-height: 75px;
-            padding: 10px;
+            min-height: 95px;
+            padding: 5px;
         }
 
         .sidebar-ad {
-            height: 250px;
-            padding: 15px;
+            height: 260px;
+            padding: 5px;
         }
 
         .theater-section {
@@ -380,7 +380,9 @@
                 grid-template-columns: 1fr;
             }
             .sidebar-ad {
-                height: 150px;
+                height: 260px;
+                width: 300px;
+                margin: 0 auto;
             }
         }
 
@@ -426,8 +428,16 @@
 
     <div class="app-container">
         <div class="ad-container top-banner-ad">
-            <div class="ad-label">Advertisement</div>
-            <span style="opacity: 0.6; font-size: 11px;"><i class="fa-solid fa-rectangle-ad"></i> Responsive Top Banner Ad Slot</span>
+            <script>
+              atOptions = {
+                'key' : '7dca49ffdc46b154e44e5345e34ec5eb',
+                'format' : 'iframe',
+                'height' : 90,
+                'width' : 728,
+                'params' : {}
+              };
+            </script>
+            <script src="https://www.highperformanceformat.com/7dca49ffdc46b154e44e5345e34ec5eb/invoke.js"></script>
         </div>
 
         <div class="theater-section">
@@ -449,8 +459,16 @@
             
             <div class="sidebar-column">
                 <div class="ad-container sidebar-ad">
-                    <div class="ad-label">Sponsored</div>
-                    <span style="opacity: 0.6; font-size: 11px;"><i class="fa-solid fa-rectangle-ad"></i> Sidebar Square Ad Slot</span>
+                    <script>
+                      atOptions = {
+                        'key' : 'e036c434600078e3335aedb27d2b7d53',
+                        'format' : 'iframe',
+                        'height' : 250,
+                        'width' : 300,
+                        'params' : {}
+                      };
+                    </script>
+                    <script src="https://www.highperformanceformat.com/e036c434600078e3335aedb27d2b7d53/invoke.js"></script>
                 </div>
             </div>
         </div>
@@ -483,7 +501,7 @@
     </footer>
 
     <script>
-        // স্ক্রিনশট অনুযায়ী আপনার ফিক্সড প্লেলিস্ট ফাইল নেম সেট করা হলো
+        // প্লেলিস্ট ফাইল নেম সেটিংস
         const playlists = {
             playlist1: 'https://raw.githubusercontent.com/junaidthakur/PlayCast/main/media1.m3u',
             playlist2: 'https://raw.githubusercontent.com/junaidthakur/PlayCast/main/media2.m3u'
@@ -590,11 +608,4 @@
 
         function searchChannels() {
             const query = document.getElementById('searchBox').value.toLowerCase();
-            const filtered = channelsList.filter(ch => ch.name.toLowerCase().includes(query));
-            displayChannels(filtered);
-        }
-
-        window.onload = () => loadPlaylist(playlists.playlist1);
-    </script>
-</body>
-</html>
+            const filtered = channelsList.filter(ch => ch
