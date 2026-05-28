@@ -1,24 +1,24 @@
-const CACHE_NAME = 'playcast-v1';
-const ASSETS = [
-  'index.html',
-  'icon.png',
-  'manifest.json'
+const CACHE_NAME = 'playcast-v2';
+const assets = [
+  '/PlayCast/',
+  '/PlayCast/index.html',
+  '/PlayCast/manifest.json',
+  '/PlayCast/icon.png'
 ];
 
-// ইনস্টল ইভেন্ট
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(assets);
     })
   );
 });
 
-// ফেচ ইভেন্ট (অনলাইন/অফলাইন লোড ঠিক রাখার জন্য)
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((response) => {
-      return response || fetch(e.request);
+// এই fetch ইভেন্টটি ক্রোম ব্রাউজারের জন্য বাধ্যতামূলক
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(cachedResponse => {
+      return cachedResponse || fetch(event.request);
     })
   );
 });
