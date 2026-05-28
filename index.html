@@ -36,7 +36,7 @@
                 radial-gradient(circle at 10% 20%, rgba(112, 0, 255, 0.15) 0%, transparent 40%),
                 radial-gradient(circle at 90% 80%, rgba(255, 42, 95, 0.12) 0%, transparent 40%);
             background-attachment: fixed;
-            padding-bottom: 30px;
+            padding-bottom: 80px;
         }
 
         .navbar {
@@ -123,6 +123,13 @@
             padding: 5px;
         }
 
+        .in-feed-ad {
+            min-height: 80px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
         .theater-section {
             display: grid;
             grid-template-columns: 3fr 1fr;
@@ -162,13 +169,15 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 15px;
         }
 
         .current-meta {
             display: flex;
             align-items: center;
             gap: 12px;
-            width: 100%;
+            overflow: hidden;
+            flex-grow: 1;
         }
 
         .current-logo {
@@ -198,6 +207,33 @@
             align-items: center;
             gap: 4px;
             margin-top: 2px;
+        }
+
+        /* কাস্টম ফুলস্ক্রিন বাটনের স্টাইল */
+        .fullscreen-btn {
+            background: linear-gradient(45deg, var(--primary-glow), var(--secondary-glow));
+            color: #fff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(255, 42, 95, 0.25);
+        }
+
+        .fullscreen-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255, 42, 95, 0.4);
+        }
+
+        .fullscreen-btn:active {
+            transform: translateY(0);
         }
 
         .tabs-and-search-container {
@@ -375,6 +411,41 @@
             color: #fff;
         }
 
+        .sticky-bottom-ad {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 728px;
+            background: rgba(17, 17, 34, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border-color);
+            z-index: 2000;
+            padding: 5px;
+            text-align: center;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .close-ad-btn {
+            position: absolute;
+            top: -12px;
+            right: 15px;
+            background: var(--primary-glow);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 22px;
+            box-shadow: 0 2px 8px rgba(255, 42, 95, 0.4);
+        }
+
         @media (max-width: 992px) {
             .theater-section {
                 grid-template-columns: 1fr;
@@ -397,6 +468,11 @@
             .channel-card { height: 105px; padding: 10px 6px; }
             .channel-card img { height: 42px; }
             .channel-card span { font-size: 11px; }
+            .sticky-bottom-ad { max-width: 100%; border-radius: 0; }
+            
+            /* মোবাইলে ইনফোবারটিকে নিচে নিচে দেখানোর জন্য */
+            .player-info-bar { flex-direction: row; justify-content: space-between; padding: 12px; }
+            .fullscreen-btn { padding: 8px 12px; font-size: 12px; }
         }
 
         .app-footer {
@@ -454,6 +530,9 @@
                             <div class="current-status"><i class="fa-solid fa-signal"></i> High Definition Streaming</div>
                         </div>
                     </div>
+                    <button class="fullscreen-btn" onclick="toggleFullscreen()">
+                        <i class="fa-solid fa-expand"></i> Full Screen
+                    </button>
                 </div>
             </div>
             
@@ -475,11 +554,14 @@
 
         <div class="tabs-and-search-container">
             <div class="category-tabs">
-                <button class="tab-button active" onclick="switchPlaylist('playlist1')">
-                    <i class="fa-solid fa-tv"></i> জেনারেল টিভি (Media 1)
+                <button class="tab-button active" onclick="switchPlaylist('bangladeshi')">
+                    <i class="fa-solid fa-flag"></i> বাংলাদেশী টিভি
                 </button>
-                <button class="tab-button" onclick="switchPlaylist('playlist2')">
-                    <i class="fa-solid fa-trophy"></i> স্পোর্টস ও প্রিমিয়াম (Media 2)
+                <button class="tab-button" onclick="switchPlaylist('indian')">
+                    <i class="fa-solid fa-tv"></i> ইন্ডিয়ান টিভি
+                </button>
+                <button class="tab-button" onclick="switchPlaylist('sports')">
+                    <i class="fa-solid fa-trophy"></i> স্পোর্টস ও প্রিমিয়াম
                 </button>
             </div>
 
@@ -487,6 +569,11 @@
                 <i class="fa-solid fa-magnifying-glass"></i>
                 <input type="text" id="searchBox" class="search-input" placeholder="চ্যানেলের নাম দিয়ে সার্চ করুন..." onkeyup="searchChannels()">
             </div>
+        </div>
+
+        <div class="ad-container in-feed-ad">
+            <p style="color: var(--text-muted); font-size: 11px; margin-bottom: 4px;"><i class="fa-solid fa-rectangle-ad"></i> Sponsored Advertisement</p>
+            <div style="font-size: 13px; color: #fff;">প্রিমিয়াম স্ট্রিমিং অভিজ্ঞতা উপভোগ করতে আমাদের সাথেই থাকুন।</div>
         </div>
 
         <div class="channels-display-section">
@@ -500,10 +587,19 @@
         &copy; 2026 <a href="#">PlayCast</a> | All Rights Reserved. Fully Responsive Architecture.
     </footer>
 
+    <div class="sticky-bottom-ad" id="stickyBottomAd">
+        <button class="close-ad-btn" onclick="document.getElementById('stickyBottomAd').style.display='none'">×</button>
+        <p style="color: var(--text-muted); font-size: 10px; margin-bottom: 2px;">Advertisement</p>
+        <div style="background: rgba(255,255,255,0.05); height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 12px; color: var(--text-muted);">
+            [এখানে আপনার Adsterra Banner Code পেস্ট করুন]
+        </div>
+    </div>
+
     <script>
         const playlists = {
-            playlist1: 'media1.m3u',
-            playlist2: 'media2.m3u'
+            bangladeshi: 'bangladeshi.m3u8',
+            indian: 'media1.m3u',
+            sports: 'media2.m3u'
         };
 
         let channelsList = [];
@@ -548,7 +644,7 @@
                 }
             }
             displayChannels(channelsList);
-            if(channelsList.length > 0) playStream(0, false);
+            if(channelsList.length > 0) playStream(0);
         }
 
         function displayChannels(channels) {
@@ -565,17 +661,17 @@
                 const card = document.createElement('div');
                 card.className = 'channel-card';
                 card.setAttribute('id', 'ch-' + realIndex);
-                card.onclick = () => playStream(realIndex, true); // ম্যানুয়ালি ক্লিক করলেই ট্রিকার হবে
+                card.onclick = () => playStream(realIndex); 
                 
                 card.innerHTML = `
                     <img src="${ch.logo}" onerror="this.src='https://via.placeholder.com/150x90?text=${encodeURIComponent(ch.name)}'">
                     <span>${ch.name}</span>
                 `;
-                grid.appendChild(grid.appendChild(card));
+                grid.appendChild(card);
             });
         }
 
-        function playStream(index, triggerAd = false) {
+        function playStream(index) {
             const channel = channelsList[index];
             if (!channel) return;
 
@@ -596,10 +692,37 @@
             } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                 video.src = channel.url;
             }
+        }
 
-            // চ্যানেল পাল্টালে Adsterra Popunder রান করার স্ক্রিপ্ট ট্রিকার
-            if (triggerAd) {
-                executePopunder();
+        // ফুলস্ক্রিন করার আধুনিক জাভাস্ক্রিপ্ট ফাংশন
+        function toggleFullscreen() {
+            if (!document.fullscreenElement &&    // স্ট্যান্ডার্ড মেথড
+                !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement ) {  
+                
+                // প্লেয়ারটিকে ফুলস্ক্রিন করা হচ্ছে (সব ব্রাউজার ও ডিভাইসের সাপোর্ট নিশ্চিত করে)
+                if (video.requestFullscreen) {
+                    video.requestFullscreen();
+                } else if (video.msRequestFullscreen) {
+                    video.msRequestFullscreen();
+                } else if (video.mozRequestFullScreen) {
+                    video.mozRequestFullScreen();
+                } else if (video.webkitRequestFullscreen) {
+                    video.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+                } else if (video.webkitEnterFullscreen) {
+                    // বিশেষ করে iOS/iPhone এবং কিছু ওল্ড টিভি ব্রাউজারের জন্য
+                    video.webkitEnterFullscreen();
+                }
+            } else {
+                // ফুলস্ক্রিন থেকে বের হওয়ার মেথড
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
             }
         }
 
@@ -617,18 +740,7 @@
             displayChannels(filtered);
         }
 
-        window.onload = () => loadPlaylist(playlists.playlist1);
-    </script>
-
-    <div id="popunder-holder" style="display:none;">
-        <script src="https://pl29568950.effectivecpmnetwork.com/d7/48/45/d74845eaacf39a960a210fe6ab2631f7.js"></script>
-    </div>
-
-    <script>
-        function executePopunder() {
-            // Adsterra-র নেটওয়ার্ক ফাইলটি রান করার লজিক
-            console.log("Popunder Triggered via Channel Switch");
-        }
+        window.onload = () => loadPlaylist(playlists.bangladeshi);
     </script>
 
 </body>
