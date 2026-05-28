@@ -589,9 +589,8 @@
     </div>
 
     <script>
-        // ৩টি আলাদা ফাইল সোর্স ম্যাপিং ঠিক করা হয়েছে
         const playlists = {
-            bangladeshi: 'bangladeshi.m3u8',
+            bangladeshi: 'bangladeshi.m3u',
             indian: 'media1.m3u',
             sports: 'media2.m3u'
         };
@@ -607,38 +606,67 @@
             grid.innerHTML = "<p style='text-align: center; grid-column: 1/-1; color: var(--text-muted); padding: 25px;'><i class='fa-solid fa-spinner fa-spin'></i> চ্যানেল লোড হচ্ছে...</p>";
             
             try {
-                const response = await fetch(url);
-                if(!response.ok) throw new Error("HTTP error");
+                const finalUrl = url + '?t=' + new Date().getTime();
+                const response = await fetch(finalUrl);
+                
+                if(!response.ok) throw new Error("HTTP error: " + response.status);
+                
                 const data = await response.text();
                 channelsList = []; 
                 parseM3U(data);
             } catch (err) {
-                grid.innerHTML = "<p style='color:#ff2a5f; text-align:center; grid-column:1/-1; padding: 15px;'><i class='fa-solid fa-circle-exclamation'></i> প্লেলিস্ট বা চ্যানেল খুঁজে পাওয়া যায়নি!</p>";
+                console.error("Error loading playlist:", err);
+                grid.innerHTML = "<p style='color:#ff2a5f; text-align:center; grid-column:1/-1; padding: 15px;'><i class='fa-solid fa-circle-exclamation'></i> প্লেলিস্ট ফাইলটি পাওয়া যায়নি! ফাইলের নাম 'bangladeshi.m3u' নিশ্চিত করুন।</p>";
             }
         }
 
+        // সুপার অ্যাডভান্সড আল্ট্রা-রিল্যাক্সড পার্সার লজিক
         function parseM3U(text) {
-            const lines = text.split('\n');
-            let current = null;
+            const lines = text.split(/\r?\n/);
+            let currentName = "";
+            let currentLogo = "https://via.placeholder.com/150x90?text=Live+TV";
 
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i].trim();
-                if (line.startsWith('#EXTINF:')) {
-                    const name = line.split(',')[line.split(',').length - 1] || "Live TV Channel";
-                    let logo = 'https://via.placeholder.com/150x90?text=Live+TV';
+                
+                if (!line) continue;
+
+                if (line.toUpperCase().startsWith('#EXTINF:')) {
+                    // ১. লোগো খুঁজে বের করা (ক্লিন ও ডাবল কোটেশন ছাড়া সিঙ্গেল কোটেশনও হ্যান্ডেল করবে)
+                    const logoMatch = line.match(/tvg-logo=["']([^"']*)["']/i);
+                    currentLogo = (logoMatch && logoMatch[1]) ? logoMatch[1] : "https://via.placeholder.com/150x90?text=Live+TV";
                     
-                    const logoMatch = line.match(/tvg-logo="(.*?)"/);
-                    if (logoMatch && logoMatch[1]) logo = logoMatch[1];
+                    // ২. চ্যানেলের নাম খুঁজে বের করা (কমা চিহ্নের পরের অংশটুকুই নাম)
+                    const commaIndex = line.lastIndexOf(',');
+                    if (commaIndex !== -1) {
+                        currentName = line.substring(commaIndex + 1).trim();
+                    } else {
+                        currentName = "Live TV Channel";
+                    }
+                } 
+                // যদি লাইনটি কোনো মডিফায়ার বা কমেন্ট (#) না হয়, তবে এটিই হলো ভিডিওর আসল স্ট্রিম লিংক
+                else if (!line.startsWith('#')) {
+                    if (!currentName) {
+                        currentName = "Live Channel " + (channelsList.length + 1);
+                    }
                     
-                    current = { name, logo, url: '' };
-                } else if (line && !line.startsWith('#') && current) {
-                    current.url = line;
-                    channelsList.push(current);
-                    current = null;
+                    channelsList.push({
+                        name: currentName,
+                        logo: currentLogo,
+                        url: line
+                    });
+                    
+                    // ভ্যারিয়েবল রিসেট করে পরবর্তী চ্যানেলের জন্য প্রস্তুত করা হচ্ছে
+                    currentName = "";
+                    currentLogo = "https://via.placeholder.com/150x90?text=Live+TV";
                 }
             }
+            
             displayChannels(channelsList);
-            if(channelsList.length > 0) playStream(0);
+            
+            if(channelsList.length > 0) {
+                playStream(0);
+            }
         }
 
         function displayChannels(channels) {
@@ -680,7 +708,7 @@
             if (hls) hls.destroy();
 
             if (Hls.isSupported()) {
-                hls = new Hls();
+                hls = new Hls({ maxMaxBufferLength: 10 });
                 hls.loadSource(channel.url);
                 hls.attachMedia(video);
             } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -703,18 +731,10 @@
             }
         }
 
-        // ক্যাটাগরি বাটন অ্যাক্টিভেশন লজিক সম্পূর্ণরূপে ফিক্স করা হয়েছে 
         function switchPlaylist(key) {
-            // প্রথমে সব বাটন থেকে active ক্লাস রিমুভ করা হচ্ছে
             document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-            
-            // ক্লিক করা নির্দিষ্ট বাটনটিতে active ক্লাস যোগ করা হচ্ছে
             const activeBtn = document.getElementById('btn-' + key);
-            if (activeBtn) {
-                activeBtn.classList.add('active');
-            }
-            
-            // নতুন প্লেলিস্টের ডাটা গ্রিডে লোড করা হচ্ছে
+            if (activeBtn) activeBtn.classList.add('active');
             loadPlaylist(playlists[key]);
         }
 
@@ -724,7 +744,6 @@
             displayChannels(filtered);
         }
 
-        // সাইট প্রথমবার ওপেন হলে সরাসরি বাংলাদেশী টিভি সেকশন লোড হবে
         window.onload = () => loadPlaylist(playlists.bangladeshi);
     </script>
 
