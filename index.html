@@ -209,7 +209,6 @@
             margin-top: 2px;
         }
 
-        /* কাস্টম ফুলস্ক্রিন বাটনের স্টাইল */
         .fullscreen-btn {
             background: linear-gradient(45deg, var(--primary-glow), var(--secondary-glow));
             color: #fff;
@@ -230,10 +229,6 @@
         .fullscreen-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 15px rgba(255, 42, 95, 0.4);
-        }
-
-        .fullscreen-btn:active {
-            transform: translateY(0);
         }
 
         .tabs-and-search-container {
@@ -469,8 +464,6 @@
             .channel-card img { height: 42px; }
             .channel-card span { font-size: 11px; }
             .sticky-bottom-ad { max-width: 100%; border-radius: 0; }
-            
-            /* মোবাইলে ইনফোবারটিকে নিচে নিচে দেখানোর জন্য */
             .player-info-bar { flex-direction: row; justify-content: space-between; padding: 12px; }
             .fullscreen-btn { padding: 8px 12px; font-size: 12px; }
         }
@@ -554,13 +547,13 @@
 
         <div class="tabs-and-search-container">
             <div class="category-tabs">
-                <button class="tab-button active" onclick="switchPlaylist('bangladeshi')">
+                <button id="btn-bangladeshi" class="tab-button active" onclick="switchPlaylist('bangladeshi')">
                     <i class="fa-solid fa-flag"></i> বাংলাদেশী টিভি
                 </button>
-                <button class="tab-button" onclick="switchPlaylist('indian')">
+                <button id="btn-indian" class="tab-button" onclick="switchPlaylist('indian')">
                     <i class="fa-solid fa-tv"></i> ইন্ডিয়ান টিভি
                 </button>
-                <button class="tab-button" onclick="switchPlaylist('sports')">
+                <button id="btn-sports" class="tab-button" onclick="switchPlaylist('sports')">
                     <i class="fa-solid fa-trophy"></i> স্পোর্টস ও প্রিমিয়াম
                 </button>
             </div>
@@ -596,6 +589,7 @@
     </div>
 
     <script>
+        // ৩টি আলাদা ফাইল সোর্স ম্যাপিং ঠিক করা হয়েছে
         const playlists = {
             bangladeshi: 'bangladeshi.m3u8',
             indian: 'media1.m3u',
@@ -694,43 +688,33 @@
             }
         }
 
-        // ফুলস্ক্রিন করার আধুনিক জাভাস্ক্রিপ্ট ফাংশন
         function toggleFullscreen() {
-            if (!document.fullscreenElement &&    // স্ট্যান্ডার্ড মেথড
-                !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement ) {  
-                
-                // প্লেয়ারটিকে ফুলস্ক্রিন করা হচ্ছে (সব ব্রাউজার ও ডিভাইসের সাপোর্ট নিশ্চিত করে)
-                if (video.requestFullscreen) {
-                    video.requestFullscreen();
-                } else if (video.msRequestFullscreen) {
-                    video.msRequestFullscreen();
-                } else if (video.mozRequestFullScreen) {
-                    video.mozRequestFullScreen();
-                } else if (video.webkitRequestFullscreen) {
-                    video.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-                } else if (video.webkitEnterFullscreen) {
-                    // বিশেষ করে iOS/iPhone এবং কিছু ওল্ড টিভি ব্রাউজারের জন্য
-                    video.webkitEnterFullscreen();
-                }
+            if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement ) {  
+                if (video.requestFullscreen) { video.requestFullscreen(); } 
+                else if (video.msRequestFullscreen) { video.msRequestFullscreen(); } 
+                else if (video.mozRequestFullScreen) { video.mozRequestFullScreen(); } 
+                else if (video.webkitFullscreen) { video.webkitFullscreen(); } 
+                else if (video.webkitEnterFullscreen) { video.webkitEnterFullscreen(); }
             } else {
-                // ফুলস্ক্রিন থেকে বের হওয়ার মেথড
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.msExitFullscreen) {
-                    document.msExitFullscreen();
-                } else if (document.mozCancelFullScreen) {
-                    document.mozCancelFullScreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                }
+                if (document.exitFullscreen) { document.exitFullscreen(); } 
+                else if (document.msExitFullscreen) { document.msExitFullscreen(); } 
+                else if (document.mozCancelFullScreen) { document.mozCancelFullScreen(); } 
+                else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
             }
         }
 
+        // ক্যাটাগরি বাটন অ্যাক্টিভেশন লজিক সম্পূর্ণরূপে ফিক্স করা হয়েছে 
         function switchPlaylist(key) {
+            // প্রথমে সব বাটন থেকে active ক্লাস রিমুভ করা হচ্ছে
             document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-            if (event && event.currentTarget) {
-                event.currentTarget.classList.add('active');
+            
+            // ক্লিক করা নির্দিষ্ট বাটনটিতে active ক্লাস যোগ করা হচ্ছে
+            const activeBtn = document.getElementById('btn-' + key);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
             }
+            
+            // নতুন প্লেলিস্টের ডাটা গ্রিডে লোড করা হচ্ছে
             loadPlaylist(playlists[key]);
         }
 
@@ -740,6 +724,7 @@
             displayChannels(filtered);
         }
 
+        // সাইট প্রথমবার ওপেন হলে সরাসরি বাংলাদেশী টিভি সেকশন লোড হবে
         window.onload = () => loadPlaylist(playlists.bangladeshi);
     </script>
 
