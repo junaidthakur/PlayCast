@@ -589,9 +589,9 @@
     </div>
 
     <script>
-        // ফাইলনেম পরিবর্তন করে bangladeshi.m3ু করা হয়েছে
+        // ৩টি আলাদা ফাইল সোর্স ম্যাপিং ঠিক করা হয়েছে
         const playlists = {
-            bangladeshi: 'bangladeshi.m3u',
+            bangladeshi: 'bangladeshi.m3u8',
             indian: 'media1.m3u',
             sports: 'media2.m3u'
         };
@@ -602,62 +602,43 @@
         const currentTitle = document.getElementById('currentTitle');
         let hls = null;
 
-        // মডিফাইড ডাটা লোডার ফাংশন (ক্যাশিং এবং CORS সমস্যার স্থায়ী সমাধান সহ)
         async function loadPlaylist(url) {
             const grid = document.getElementById('channelGrid');
             grid.innerHTML = "<p style='text-align: center; grid-column: 1/-1; color: var(--text-muted); padding: 25px;'><i class='fa-solid fa-spinner fa-spin'></i> চ্যানেল লোড হচ্ছে...</p>";
             
             try {
-                // ব্রাউজারের ওল্ড ক্যাশ এড়াতে টাইমস্ট্যাম্প যোগ করা হয়েছে
-                const finalUrl = url + '?t=' + new Date().getTime();
-                const response = await fetch(finalUrl);
-                
-                if(!response.ok) throw new Error("HTTP error: " + response.status);
-                
+                const response = await fetch(url);
+                if(!response.ok) throw new Error("HTTP error");
                 const data = await response.text();
                 channelsList = []; 
-                
-                // M3U ফাইল সঠিকভাবে পার্স করা
                 parseM3U(data);
             } catch (err) {
-                console.error("Error loading playlist:", err);
-                grid.innerHTML = "<p style='color:#ff2a5f; text-align:center; grid-column:1/-1; padding: 15px;'><i class='fa-solid fa-circle-exclamation'></i> প্লেলিস্ট বা চ্যানেল লোড করা যায়নি! ফাইলের নাম এবং পাথ চেক করুন।</p>";
+                grid.innerHTML = "<p style='color:#ff2a5f; text-align:center; grid-column:1/-1; padding: 15px;'><i class='fa-solid fa-circle-exclamation'></i> প্লেলিস্ট বা চ্যানেল খুঁজে পাওয়া যায়নি!</p>";
             }
         }
 
         function parseM3U(text) {
-            // উইন্ডোজ ও লিনাক্স সব ধরণের লাইনের ফরম্যাট সাপোর্ট করার জন্য রিল্যাক্সড স্প্লিট লজিক
-            const lines = text.split(/\r?\n/);
+            const lines = text.split('\n');
             let current = null;
 
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i].trim();
-                
                 if (line.startsWith('#EXTINF:')) {
-                    // নাম এক্সট্র্যাক্ট করার নিরাপদ নিয়ম
-                    const commaIndex = line.lastIndexOf(',');
-                    const name = commaIndex !== -1 ? line.substring(commaIndex + 1).trim() : "Live TV Channel";
+                    const name = line.split(',')[line.split(',').length - 1] || "Live TV Channel";
                     let logo = 'https://via.placeholder.com/150x90?text=Live+TV';
                     
-                    const logoMatch = line.match(/tvg-logo="([^"]*)"/) || line.match(/tvg-logo='([^']*)'/);
+                    const logoMatch = line.match(/tvg-logo="(.*?)"/);
                     if (logoMatch && logoMatch[1]) logo = logoMatch[1];
                     
                     current = { name, logo, url: '' };
-                } else if (line && !line.startsWith('#')) {
-                    if (current) {
-                        current.url = line;
-                        channelsList.push(current);
-                        current = null;
-                    }
+                } else if (line && !line.startsWith('#') && current) {
+                    current.url = line;
+                    channelsList.push(current);
+                    current = null;
                 }
             }
-            
             displayChannels(channelsList);
-            
-            // ডাটা থাকলে প্রথম চ্যানেলটি প্লেয়ারে অটো-লোড হবে
-            if(channelsList.length > 0) {
-                playStream(0);
-            }
+            if(channelsList.length > 0) playStream(0);
         }
 
         function displayChannels(channels) {
@@ -699,9 +680,7 @@
             if (hls) hls.destroy();
 
             if (Hls.isSupported()) {
-                hls = new Hls({
-                    maxMaxBufferLength: 10 // দ্রুত স্ট্রিমিং লোডের জন্য বাফারিং টিউনিং
-                });
+                hls = new Hls();
                 hls.loadSource(channel.url);
                 hls.attachMedia(video);
             } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -724,14 +703,18 @@
             }
         }
 
+        // ক্যাটাগরি বাটন অ্যাক্টিভেশন লজিক সম্পূর্ণরূপে ফিক্স করা হয়েছে 
         function switchPlaylist(key) {
+            // প্রথমে সব বাটন থেকে active ক্লাস রিমুভ করা হচ্ছে
             document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
             
+            // ক্লিক করা নির্দিষ্ট বাটনটিতে active ক্লাস যোগ করা হচ্ছে
             const activeBtn = document.getElementById('btn-' + key);
             if (activeBtn) {
                 activeBtn.classList.add('active');
             }
             
+            // নতুন প্লেলিস্টের ডাটা গ্রিডে লোড করা হচ্ছে
             loadPlaylist(playlists[key]);
         }
 
@@ -741,7 +724,7 @@
             displayChannels(filtered);
         }
 
-        // সাইট বুট হওয়ার সাথে সাথে বাংলাদেশী চ্যানেল লোড হবে
+        // সাইট প্রথমবার ওপেন হলে সরাসরি বাংলাদেশী টিভি সেকশন লোড হবে
         window.onload = () => loadPlaylist(playlists.bangladeshi);
     </script>
 
