@@ -589,8 +589,9 @@
     </div>
 
     <script>
+        // আপনার গিটহাবের রিয়েল Raw লিংকটি সরাসরি নিচে সেট করে দেওয়া হয়েছে
         const playlists = {
-            bangladeshi: 'bangladeshi.m3u',
+            bangladeshi: 'https://raw.githubusercontent.com/junaidthakur/PlayCast/main/bangladeshi.m3u',
             indian: 'media1.m3u',
             sports: 'media2.m3u'
         };
@@ -616,11 +617,10 @@
                 parseM3U(data);
             } catch (err) {
                 console.error("Error loading playlist:", err);
-                grid.innerHTML = "<p style='color:#ff2a5f; text-align:center; grid-column:1/-1; padding: 15px;'><i class='fa-solid fa-circle-exclamation'></i> প্লেলিস্ট ফাইলটি পাওয়া যায়নি! ফাইলের নাম 'bangladeshi.m3u' নিশ্চিত করুন।</p>";
+                grid.innerHTML = "<p style='color:#ff2a5f; text-align:center; grid-column:1/-1; padding: 15px;'><i class='fa-solid fa-circle-exclamation'></i> প্লেলিস্ট লোড করতে সমস্যা হচ্ছে! গিটহাবের ফাইল বা ইন্টারনেট কানেকশন চেক করুন।</p>";
             }
         }
 
-        // সুপার অ্যাডভান্সড আল্ট্রা-রিল্যাক্সড পার্সার লজিক
         function parseM3U(text) {
             const lines = text.split(/\r?\n/);
             let currentName = "";
@@ -628,27 +628,17 @@
 
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i].trim();
-                
                 if (!line) continue;
 
                 if (line.toUpperCase().startsWith('#EXTINF:')) {
-                    // ১. লোগো খুঁজে বের করা (ক্লিন ও ডাবল কোটেশন ছাড়া সিঙ্গেল কোটেশনও হ্যান্ডেল করবে)
                     const logoMatch = line.match(/tvg-logo=["']([^"']*)["']/i);
                     currentLogo = (logoMatch && logoMatch[1]) ? logoMatch[1] : "https://via.placeholder.com/150x90?text=Live+TV";
                     
-                    // ২. চ্যানেলের নাম খুঁজে বের করা (কমা চিহ্নের পরের অংশটুকুই নাম)
                     const commaIndex = line.lastIndexOf(',');
-                    if (commaIndex !== -1) {
-                        currentName = line.substring(commaIndex + 1).trim();
-                    } else {
-                        currentName = "Live TV Channel";
-                    }
+                    currentName = (commaIndex !== -1) ? line.substring(commaIndex + 1).trim() : "Live TV Channel";
                 } 
-                // যদি লাইনটি কোনো মডিফায়ার বা কমেন্ট (#) না হয়, তবে এটিই হলো ভিডিওর আসল স্ট্রিম লিংক
                 else if (!line.startsWith('#')) {
-                    if (!currentName) {
-                        currentName = "Live Channel " + (channelsList.length + 1);
-                    }
+                    if (!currentName) currentName = "Live Channel " + (channelsList.length + 1);
                     
                     channelsList.push({
                         name: currentName,
@@ -656,17 +646,13 @@
                         url: line
                     });
                     
-                    // ভ্যারিয়েবল রিসেট করে পরবর্তী চ্যানেলের জন্য প্রস্তুত করা হচ্ছে
                     currentName = "";
                     currentLogo = "https://via.placeholder.com/150x90?text=Live+TV";
                 }
             }
             
             displayChannels(channelsList);
-            
-            if(channelsList.length > 0) {
-                playStream(0);
-            }
+            if(channelsList.length > 0) playStream(0);
         }
 
         function displayChannels(channels) {
