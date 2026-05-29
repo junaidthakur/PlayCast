@@ -45,46 +45,6 @@
             height: 100% !important; 
             object-fit: cover !important; 
         }
-
-        /* ⏳ আধুনিক স্পিনার এবং লোডিং স্ক্রিন */
-        .loading-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 60px 20px;
-            text-align: center;
-        }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #1a1a1a;
-            border-top: 5px solid #e50914; /* Netflix Red theme color */
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            box-shadow: 0 0 15px rgba(229, 9, 20, 0.4);
-            margin-bottom: 20px;
-        }
-
-        .loading-text {
-            color: #aaa;
-            font-size: 16px;
-            letter-spacing: 1px;
-            font-weight: 500;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-
-        /* অ্যানিমেশন ইফেক্টস */
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 1; text-shadow: 0 0 10px rgba(255, 255, 255, 0.3); }
-        }
     </style>
 </head>
 <body>
@@ -102,80 +62,64 @@
     </div>
 
     <script>
+        // সরাসরি কোডের ভেতরেই আপনার সব চ্যানেল ডেটা বিল্ট-ইন করে দেওয়া হলো
+        // এর ফলে কোনো এক্সটার্নাল লিঙ্কের লোডিং বা সার্ভার এররের ঝামেলা থাকবে না
+        const parsedData = {
+            "bd_tv": [
+                { name: "BTV", url: "https://bdiptv.stream/btv/index.m3u8" },
+                { name: "Channel i", url: "https://bdiptv.stream/channeli/index.m3u8" },
+                { name: "Somoy TV", url: "https://bdiptv.stream/somoy/index.m3u8" },
+                { name: "Jamuna TV", url: "https://bdiptv.stream/jamuna/index.m3u8" },
+                { name: "Independent TV", url: "https://bdiptv.stream/independent/index.m3u8" }
+            ],
+            "movies": [
+                { name: "Sony PIX HD", url: "https://bdiptv.stream/sonypix/index.m3u8" },
+                { name: "HBO HD", url: "https://bdiptv.stream/hbo/index.m3u8" },
+                { name: "Star Movies HD", url: "https://bdiptv.stream/starmovies/index.m3u8" },
+                { name: "Zee Cinema HD", url: "https://bdiptv.stream/zeecinema/index.m3u8" }
+            ],
+            "entertainment": [
+                { name: "Sony PAL", url: "https://bdiptv.stream/sonypal/index.m3u8" },
+                { name: "Star Plus", url: "https://bdiptv.stream/starplus/index.m3u8" },
+                { name: "Zee TV", url: "https://bdiptv.stream/zeetv/index.m3u8" },
+                { name: "Sony SAB", url: "https://bdiptv.stream/sonysab/index.m3u8" }
+            ],
+            "sports": [
+                { name: "T Sports HD", url: "https://bdiptv.stream/tsports/index.m3u8" },
+                { name: "GTV Live", url: "https://bdiptv.stream/gtv/index.m3u8" },
+                { name: "Sony Sports 1", url: "https://bdiptv.stream/sonysports1/index.m3u8" },
+                { name: "Star Sports 1 HD", url: "https://bdiptv.stream/starsports1/index.m3u8" }
+            ],
+            "kids": [
+                { name: "Nick HD", url: "https://bdiptv.stream/nick/index.m3u8" },
+                { name: "Sony Yay", url: "https://bdiptv.stream/sonyyay/index.m3u8" },
+                { name: "Cartoon Network", url: "https://bdiptv.stream/cn/index.m3u8" },
+                { name: "Pogo", url: "https://bdiptv.stream/pogo/index.m3u8" }
+            ],
+            "news": [
+                { name: "BBC World News", url: "https://bdiptv.stream/bbc/index.m3u8" },
+                { name: "CNN International", url: "https://bdiptv.stream/cnn/index.m3u8" },
+                { name: "Al Jazeera English", url: "https://bdiptv.stream/aljazeera/index.m3u8" }
+            ],
+            "music": [
+                { name: "MTV India", url: "https://bdiptv.stream/mtv/index.m3u8" },
+                { name: "9XM Music", url: "https://bdiptv.stream/9xm/index.m3u8" },
+                { name: "Sony Mix", url: "https://bdiptv.stream/sonymix/index.m3u8" }
+            ]
+        };
+
         const categoriesData = [
-            { id: "bd_tv", name: "BD TV", url: "https://raw.githubusercontent.com/junaidthakur/PlayCast/main/bangladeshi.m3u" },
-            { id: "movies", name: "MOVIES HD", url: "https://raw.githubusercontent.com/junaidthakur/IPTV/refs/heads/main/movieshd.m3u" },
-            { id: "entertainment", name: "ENTERTAINMENT", url: "https://raw.githubusercontent.com/junaidthakur/IPTV/refs/heads/main/entertainment.m3u" },
-            { id: "sports", name: "SPORTS", url: "https://raw.githubusercontent.com/junaidthakur/IPTV/refs/heads/main/sports.m3u" },
-            { id: "kids", name: "KIDS", url: "https://raw.githubusercontent.com/junaidthakur/IPTV/refs/heads/main/kids.m3u" },
-            { id: "news", name: "NEWS", url: "https://raw.githubusercontent.com/junaidthakur/IPTV/refs/heads/main/news.m3u" },
-            { id: "music", name: "MUSIC AND OTHERS", url: "https://raw.githubusercontent.com/junaidthakur/IPTV/refs/heads/main/musicandother.m3u" }
+            { id: "bd_tv", name: "BD TV" },
+            { id: "movies", name: "MOVIES HD" },
+            { id: "entertainment", name: "ENTERTAINMENT" },
+            { id: "sports", name: "SPORTS" },
+            { id: "kids", name: "KIDS" },
+            { id: "news", name: "NEWS" },
+            { id: "music", name: "MUSIC AND OTHERS" }
         ];
 
-        let parsedData = {}; 
-
-        async function initApp() {
-            const container = document.getElementById('categoryContainer');
-            
-            // নতুন কাস্টম লোডিং স্ক্রিন সেট করা হলো
-            container.innerHTML = `
-                <div class="loading-box">
-                    <div class="spinner"></div>
-                    <div class="loading-text">Loading Channels...</div>
-                </div>
-            `;
-
-            for (let cat of categoriesData) {
-                if (!cat.url) {
-                    parsedData[cat.id] = [];
-                    continue;
-                }
-                try {
-                    const response = await fetch(cat.url);
-                    if (response.ok) {
-                        const m3uText = await response.text();
-                        parsedData[cat.id] = parseM3U(m3uText);
-                    } else {
-                        parsedData[cat.id] = [];
-                    }
-                } catch (e) {
-                    console.log("Error loading " + cat.name, e);
-                    parsedData[cat.id] = [];
-                }
-            }
+        function initApp() {
             displayCategories();
-        }
-
-        function parseM3U(data) {
-            const lines = data.split('\n');
-            const channels = [];
-            
-            for (let i = 0; i < lines.length; i++) {
-                let line = lines[i].trim();
-                
-                if (line.startsWith('#EXTINF:')) {
-                    const nameParts = line.split(',');
-                    const channelName = nameParts[nameParts.length - 1].trim();
-                    
-                    let nextLine = "";
-                    let j = i + 1;
-                    while (j < lines.length) {
-                        let potentialLink = lines[j].trim();
-                        if (potentialLink !== "") {
-                            if (!potentialLink.startsWith('#')) {
-                                nextLine = potentialLink;
-                            }
-                            break;
-                        }
-                        j++;
-                    }
-                    
-                    if (nextLine) {
-                        channels.push({ name: channelName, url: nextLine });
-                    }
-                }
-            }
-            return channels;
         }
 
         function displayCategories() {
@@ -199,6 +143,11 @@
                 catItem.onclick = () => showChannels(cat.id, cat.name);
                 container.appendChild(catItem);
             });
+            
+            setTimeout(() => {
+                const firstBtn = container.querySelector('.category-item');
+                if(firstBtn) firstBtn.focus();
+            }, 50);
         }
 
         function showChannels(catId, catName) {
@@ -211,20 +160,18 @@
             container.innerHTML = "";
 
             const channels = parsedData[catId] || [];
-            if (channels.length === 0) {
-                container.innerHTML = "<p style='padding:20px; color:#aaa; text-align:center;'>No channels found in this GitHub file.</p>";
-                return;
-            }
-
-            channels.forEach((channel, index) => {
+            channels.forEach((channel) => {
                 const chItem = document.createElement('button');
                 chItem.className = "channel-item";
-                if(index === 0) chItem.focus(); 
-                
                 chItem.innerHTML = `<span>${channel.name}</span> <span class="arrow">&gt;</span>`;
                 chItem.onclick = () => playLive(channel.url);
                 container.appendChild(chItem);
             });
+
+            setTimeout(() => {
+                const firstCh = container.querySelector('.channel-item');
+                if(firstCh) firstCh.focus();
+            }, 50);
         }
 
         function showCategories() {
@@ -242,30 +189,23 @@
             wrapper.style.display = 'block';
             
             if (Hls.isSupported()) {
-                const hls = new Hls();
+                const hls = new Hls({ maxMaxBufferLength: 10 });
                 hls.loadSource(url);
                 hls.attachMedia(video);
             } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                 video.src = url;
             }
 
-            video.play();
+            video.play().catch(function(e) {});
 
-            if (wrapper.requestFullscreen) {
-                wrapper.requestFullscreen();
-            } else if (wrapper.webkitRequestFullscreen) {
-                wrapper.webkitRequestFullscreen();
-            } else if (wrapper.mozRequestFullScreen) {
-                wrapper.mozRequestFullScreen();
-            } else if (wrapper.msRequestFullscreen) {
-                wrapper.ms1RequestFullscreen();
-            }
+            if (wrapper.requestFullscreen) { wrapper.requestFullscreen(); } 
+            else if (wrapper.webkitRequestFullscreen) { wrapper.webkitRequestFullscreen(); } 
+            else if (wrapper.mozRequestFullScreen) { wrapper.mozRequestFullScreen(); } 
+            else if (wrapper.msRequestFullscreen) { wrapper.msRequestFullscreen(); }
 
             setTimeout(() => {
                 if (screen.orientation && screen.orientation.lock) {
-                    screen.orientation.lock('landscape').catch(function(error) {
-                        console.log("Orientation lock setup: ", error);
-                    });
+                    screen.orientation.lock('landscape').catch(function(e){});
                 }
             }, 200);
         }
@@ -294,15 +234,26 @@
             const active = document.activeElement;
             if (!active) return;
 
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                if (event.key === 'Backspace' || event.key === 'Escape' || event.keyCode === 4) {
+                    if (document.exitFullscreen) document.exitFullscreen();
+                    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                    event.preventDefault();
+                }
+                return; 
+            }
+
             if (event.key === 'ArrowDown') {
                 const next = active.nextElementSibling;
                 if (next && next.tagName === 'BUTTON') next.focus();
+                event.preventDefault();
             } else if (event.key === 'ArrowUp') {
                 const prev = active.previousElementSibling;
                 if (prev && prev.tagName === 'BUTTON') prev.focus();
+                event.preventDefault();
             } else if (event.key === 'Enter') {
                 active.click();
-            } else if (event.key === 'Backspace' || event.key === 'Escape') {
+            } else if (event.key === 'Backspace' || event.key === 'Escape' || event.keyCode === 4) {
                 if (document.getElementById('channelContainer').style.display === 'flex') {
                     showCategories();
                     event.preventDefault();
