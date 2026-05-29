@@ -45,6 +45,43 @@
             height: 100% !important; 
             object-fit: cover !important; 
         }
+
+        /* ⬅️ শুধুমাত্র অ্যারো বাটন (গোলাকার আইকন ডিজাইন) */
+        .player-back-btn {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            z-index: 100000;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            font-size: 26px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* রিমোট ফোকাস হাইলাইট */
+        .player-back-btn:focus {
+            background: #e50914;
+            border-color: #fff;
+            outline: none;
+            transform: scale(1.15);
+            box-shadow: 0 0 15px #e50914;
+        }
+
+        /* ⏳ স্পিনার */
+        .loading-box { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #1a1a1a; border-top: 5px solid #e50914; border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px rgba(229, 9, 20, 0.4); margin-bottom: 20px; }
+        .loading-text { color: #aaa; font-size: 16px; letter-spacing: 1px; font-weight: 500; animation: pulse 1.5s ease-in-out infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; text-shadow: 0 0 10px rgba(255, 255, 255, 0.3); } }
     </style>
 </head>
 <body>
@@ -58,68 +95,72 @@
     <div class="channel-list" id="channelContainer" style="display: none;"></div>
 
     <div id="playerWrapper" class="video-wrapper">
+        <button class="player-back-btn" id="playerBackBtn" onclick="exitPlayerViaBtn()">←</button>
         <video id="videoPlayer" controls playsinline></video>
     </div>
 
     <script>
-        // সরাসরি কোডের ভেতরেই আপনার সব চ্যানেল ডেটা বিল্ট-ইন করে দেওয়া হলো
-        // এর ফলে কোনো এক্সটার্নাল লিঙ্কের লোডিং বা সার্ভার এররের ঝামেলা থাকবে না
-        const parsedData = {
-            "bd_tv": [
-                { name: "BTV", url: "https://bdiptv.stream/btv/index.m3u8" },
-                { name: "Channel i", url: "https://bdiptv.stream/channeli/index.m3u8" },
-                { name: "Somoy TV", url: "https://bdiptv.stream/somoy/index.m3u8" },
-                { name: "Jamuna TV", url: "https://bdiptv.stream/jamuna/index.m3u8" },
-                { name: "Independent TV", url: "https://bdiptv.stream/independent/index.m3u8" }
-            ],
-            "movies": [
-                { name: "Sony PIX HD", url: "https://bdiptv.stream/sonypix/index.m3u8" },
-                { name: "HBO HD", url: "https://bdiptv.stream/hbo/index.m3u8" },
-                { name: "Star Movies HD", url: "https://bdiptv.stream/starmovies/index.m3u8" },
-                { name: "Zee Cinema HD", url: "https://bdiptv.stream/zeecinema/index.m3u8" }
-            ],
-            "entertainment": [
-                { name: "Sony PAL", url: "https://bdiptv.stream/sonypal/index.m3u8" },
-                { name: "Star Plus", url: "https://bdiptv.stream/starplus/index.m3u8" },
-                { name: "Zee TV", url: "https://bdiptv.stream/zeetv/index.m3u8" },
-                { name: "Sony SAB", url: "https://bdiptv.stream/sonysab/index.m3u8" }
-            ],
-            "sports": [
-                { name: "T Sports HD", url: "https://bdiptv.stream/tsports/index.m3u8" },
-                { name: "GTV Live", url: "https://bdiptv.stream/gtv/index.m3u8" },
-                { name: "Sony Sports 1", url: "https://bdiptv.stream/sonysports1/index.m3u8" },
-                { name: "Star Sports 1 HD", url: "https://bdiptv.stream/starsports1/index.m3u8" }
-            ],
-            "kids": [
-                { name: "Nick HD", url: "https://bdiptv.stream/nick/index.m3u8" },
-                { name: "Sony Yay", url: "https://bdiptv.stream/sonyyay/index.m3u8" },
-                { name: "Cartoon Network", url: "https://bdiptv.stream/cn/index.m3u8" },
-                { name: "Pogo", url: "https://bdiptv.stream/pogo/index.m3u8" }
-            ],
-            "news": [
-                { name: "BBC World News", url: "https://bdiptv.stream/bbc/index.m3u8" },
-                { name: "CNN International", url: "https://bdiptv.stream/cnn/index.m3u8" },
-                { name: "Al Jazeera English", url: "https://bdiptv.stream/aljazeera/index.m3u8" }
-            ],
-            "music": [
-                { name: "MTV India", url: "https://bdiptv.stream/mtv/index.m3u8" },
-                { name: "9XM Music", url: "https://bdiptv.stream/9xm/index.m3u8" },
-                { name: "Sony Mix", url: "https://bdiptv.stream/sonymix/index.m3u8" }
-            ]
-        };
-
         const categoriesData = [
-            { id: "bd_tv", name: "BD TV" },
-            { id: "movies", name: "MOVIES HD" },
-            { id: "entertainment", name: "ENTERTAINMENT" },
-            { id: "sports", name: "SPORTS" },
-            { id: "kids", name: "KIDS" },
-            { id: "news", name: "NEWS" },
-            { id: "music", name: "MUSIC AND OTHERS" }
+            { id: "bd_tv", name: "BD TV", url: "https://raw.githubusercontent.com/junaidthakur/PlayCast/main/bangladeshi.m3u" },
+            { id: "movies", name: "MOVIES HD", url: "https://raw.githubusercontent.com/junaidthakur/IPTV/refs/heads/main/movieshd.m3u" },
+            { id: "entertainment", name: "ENTERTAINMENT", url: "https://raw.githubusercontent.com/junaidthakur/IPTV/refs/heads/main/entertainment.m3u" },
+            { id: "sports", name: "SPORTS", url: "https://raw.githubusercontent.com/junaidthakur/IPTV/refs/heads/main/sports.m3u" },
+            { id: "kids", name: "KIDS", url: "https://raw.githubusercontent.com/junaidthakur/IPTV/refs/heads/main/kids.m3u" },
+            { id: "news", name: "NEWS", url: "https://raw.githubusercontent.com/junaidthakur/IPTV/refs/heads/main/news.m3u" },
+            { id: "music", name: "MUSIC AND OTHERS", url: "https://raw.githubusercontent.com/junaidthakur/IPTV/refs/heads/main/musicandother.m3u" }
         ];
 
-        function initApp() {
+        let parsedData = {}; 
+        let lastFocusedElement = null; 
+        let isPlaying = false; // প্লেয়ারের স্টেট ট্র্যাকিং
+
+        async function initApp() {
+            const container = document.getElementById('categoryContainer');
+            container.innerHTML = `
+                <div class="loading-box">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Loading Channels...</div>
+                </div>
+            `;
+
+            for (let cat of categoriesData) {
+                if (!cat.url) { parsedData[cat.id] = []; continue; }
+                try {
+                    const response = await fetch(cat.url);
+                    if (response.ok) {
+                        const m3uText = await response.text();
+                        parsedData[cat.id] = parseM3U(m3uText);
+                    } else { parsedData[cat.id] = []; }
+                } catch (e) {
+                    console.log("Error loading " + cat.name, e);
+                    parsedData[cat.id] = [];
+                }
+            }
             displayCategories();
+        }
+
+        function parseM3U(data) {
+            const lines = data.split('\n');
+            const channels = [];
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+                if (line.startsWith('#EXTINF:')) {
+                    const nameParts = line.split(',');
+                    const channelName = nameParts[nameParts.length - 1].trim();
+                    let nextLine = "";
+                    let j = i + 1;
+                    while (j < lines.length) {
+                        let potentialLink = lines[j].trim();
+                        if (potentialLink !== "") {
+                            if (!potentialLink.startsWith('#')) { nextLine = potentialLink; }
+                            break;
+                        }
+                        j++;
+                    }
+                    if (nextLine) { channels.push({ name: channelName, url: nextLine }); }
+                }
+            }
+            return channels;
         }
 
         function displayCategories() {
@@ -128,9 +169,9 @@
             
             categoriesData.forEach((cat, index) => {
                 const totalChannels = parsedData[cat.id] ? parsedData[cat.id].length : 0;
-                
                 const catItem = document.createElement('button');
                 catItem.className = "category-item";
+                catItem.id = "cat-" + cat.id;
                 if(index === 0) catItem.setAttribute('autofocus', 'true'); 
                 
                 catItem.innerHTML = `
@@ -143,14 +184,11 @@
                 catItem.onclick = () => showChannels(cat.id, cat.name);
                 container.appendChild(catItem);
             });
-            
-            setTimeout(() => {
-                const firstBtn = container.querySelector('.category-item');
-                if(firstBtn) firstBtn.focus();
-            }, 50);
         }
 
         function showChannels(catId, catName) {
+            lastFocusedElement = document.getElementById("cat-" + catId);
+
             document.getElementById('categoryContainer').style.display = 'none';
             document.getElementById('channelContainer').style.display = 'flex';
             document.getElementById('backBtn').style.display = 'block';
@@ -160,11 +198,21 @@
             container.innerHTML = "";
 
             const channels = parsedData[catId] || [];
-            channels.forEach((channel) => {
+            if (channels.length === 0) {
+                container.innerHTML = "<p style='padding:20px; color:#aaa; text-align:center;'>No channels found.</p>";
+                return;
+            }
+
+            channels.forEach((channel, index) => {
                 const chItem = document.createElement('button');
                 chItem.className = "channel-item";
+                chItem.id = "ch-" + catId + "-" + index;
                 chItem.innerHTML = `<span>${channel.name}</span> <span class="arrow">&gt;</span>`;
-                chItem.onclick = () => playLive(channel.url);
+                
+                chItem.onclick = function() {
+                    lastFocusedElement = chItem; 
+                    playLive(channel.url);
+                };
                 container.appendChild(chItem);
             });
 
@@ -179,7 +227,10 @@
             document.getElementById('channelContainer').style.display = 'none';
             document.getElementById('backBtn').style.display = 'none';
             document.getElementById('nav-header').innerText = "☰ Live TV";
-            displayCategories();
+            
+            if (lastFocusedElement && lastFocusedElement.className === "category-item") {
+                lastFocusedElement.focus();
+            }
         }
 
         function playLive(url) {
@@ -187,28 +238,84 @@
             const video = document.getElementById('videoPlayer');
             
             wrapper.style.display = 'block';
+            isPlaying = true;
+
+            // 🛠️ রিমোটের হার্ডওয়্যার ব্যাক বাটন ফিক্স করার জন্য ব্রাউজার হিস্ট্রি পুশ
+            window.history.pushState({playerOpen: true}, "Player");
             
             if (Hls.isSupported()) {
-                const hls = new Hls({ maxMaxBufferLength: 10 });
+                const hls = new Hls();
                 hls.loadSource(url);
                 hls.attachMedia(video);
             } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                 video.src = url;
             }
 
-            video.play().catch(function(e) {});
+            video.play().then(() => {
+                triggerFullscreen(wrapper);
+            }).catch(function(error) {
+                triggerFullscreen(wrapper);
+            });
+        }
 
-            if (wrapper.requestFullscreen) { wrapper.requestFullscreen(); } 
-            else if (wrapper.webkitRequestFullscreen) { wrapper.webkitRequestFullscreen(); } 
-            else if (wrapper.mozRequestFullScreen) { wrapper.mozRequestFullScreen(); } 
-            else if (wrapper.msRequestFullscreen) { wrapper.msRequestFullscreen(); }
+        function triggerFullscreen(element) {
+            if (element.requestFullscreen) { element.requestFullscreen().then(lockLandscape).catch(e => console.log(e)); } 
+            else if (element.webkitRequestFullscreen) { element.webkitRequestFullscreen(); setTimeout(lockLandscape, 200); } 
+            else if (element.mozRequestFullScreen) { element.mozRequestFullScreen().then(lockLandscape); } 
+            else if (element.msRequestFullscreen) { element.msRequestFullscreen(); setTimeout(lockLandscape, 200); }
+            
+            setTimeout(() => {
+                document.getElementById('playerBackBtn').focus();
+            }, 400);
+        }
+
+        function lockLandscape() {
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(function(e) {});
+            }
+        }
+
+        function exitPlayerViaBtn() {
+            // যদি আমরা পুশ করা হিস্ট্রিতে থাকি, তবে হিস্ট্রি ব্যাক করলেই ক্লোজ লজিক ট্রিগার হবে
+            if(window.history.state && window.history.state.playerOpen) {
+                window.history.back();
+            } else {
+                closeVideoPlayer();
+            }
+        }
+
+        function closeVideoPlayer() {
+            if (!isPlaying) return;
+            
+            const wrapper = document.getElementById('playerWrapper');
+            const video = document.getElementById('videoPlayer');
+            
+            video.pause();
+            video.src = ""; 
+            wrapper.style.display = 'none';
+            isPlaying = false;
+            
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            }
+
+            if (screen.orientation && screen.orientation.unlock) { screen.orientation.unlock(); }
 
             setTimeout(() => {
-                if (screen.orientation && screen.orientation.lock) {
-                    screen.orientation.lock('landscape').catch(function(e){});
+                if (lastFocusedElement) {
+                    lastFocusedElement.focus();
+                    lastFocusedElement.scrollIntoView({ block: 'center' }); 
                 }
-            }, 200);
+            }, 150);
         }
+
+        // 🛠️ ব্রাউজারের ব্যাক বাটন/রিমোট ব্যাক ডিটেকশন ফিক্স
+        window.addEventListener('popstate', function(event) {
+            if (isPlaying) {
+                closeVideoPlayer();
+            }
+        });
 
         document.addEventListener('fullscreenchange', handleExitFullscreen);
         document.addEventListener('webkitfullscreenchange', handleExitFullscreen);
@@ -216,41 +323,37 @@
         document.addEventListener('MSFullscreenChange', handleExitFullscreen);
 
         function handleExitFullscreen() {
-            const wrapper = document.getElementById('playerWrapper');
-            const video = document.getElementById('videoPlayer');
-            
             if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
-                video.pause();
-                video.src = ""; 
-                wrapper.style.display = 'none';
-                
-                if (screen.orientation && screen.orientation.unlock) {
-                    screen.orientation.unlock();
+                if(isPlaying) {
+                    exitPlayerViaBtn();
                 }
             }
         }
 
         document.addEventListener('keydown', function(event) {
             const active = document.activeElement;
-            if (!active) return;
 
-            if (document.fullscreenElement || document.webkitFullscreenElement) {
+            if (isPlaying) {
+                // রিমোটের ব্যাক বাটন চাপলে (Keycode 4 বা Backspace) সরাসরি প্লেয়ার সেফলি এক্সিট হবে
                 if (event.key === 'Backspace' || event.key === 'Escape' || event.keyCode === 4) {
-                    if (document.exitFullscreen) document.exitFullscreen();
-                    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
                     event.preventDefault();
+                    event.stopPropagation();
+                    exitPlayerViaBtn();
+                }
+                if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
+                    document.getElementById('playerBackBtn').focus();
                 }
                 return; 
             }
 
+            if (!active) return;
+
             if (event.key === 'ArrowDown') {
                 const next = active.nextElementSibling;
-                if (next && next.tagName === 'BUTTON') next.focus();
-                event.preventDefault();
+                if (next && next.tagName === 'BUTTON') { next.focus(); event.preventDefault(); }
             } else if (event.key === 'ArrowUp') {
                 const prev = active.previousElementSibling;
-                if (prev && prev.tagName === 'BUTTON') prev.focus();
-                event.preventDefault();
+                if (prev && prev.tagName === 'BUTTON') { prev.focus(); event.preventDefault(); }
             } else if (event.key === 'Enter') {
                 active.click();
             } else if (event.key === 'Backspace' || event.key === 'Escape' || event.keyCode === 4) {
