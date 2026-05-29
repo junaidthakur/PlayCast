@@ -257,6 +257,7 @@
         .category-tabs {
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
         }
 
         .tab-button {
@@ -559,13 +560,17 @@
         <div class="tabs-and-search-container">
             <div class="category-tabs">
                 <button id="btn-bangladeshi" class="tab-button active" tabindex="0" onclick="switchPlaylist('bangladeshi')">
-                    <i class="fa-solid fa-flag"></i> বাংলাদেশী টিভি
+                    <i class="fa-solid fa-flag"></i> বাংলাদেশী  টিভি
                 </button>
                 <button id="btn-indian" class="tab-button" tabindex="0" onclick="switchPlaylist('indian')">
                     <i class="fa-solid fa-tv"></i> ইন্ডিয়ান টিভি
                 </button>
                 <button id="btn-sports" class="tab-button" tabindex="0" onclick="switchPlaylist('sports')">
                     <i class="fa-solid fa-trophy"></i> স্পোর্টস ও প্রিমিয়াম
+                </button>
+                <!-- 🆕 নতুন "More TV" ক্যাটাগরি বাটন যুক্ত করা হয়েছে -->
+                <button id="btn-more" class="tab-button" tabindex="0" onclick="switchPlaylist('more')">
+                    <i class="fa-solid fa-circle-plus"></i> More TV
                 </button>
             </div>
 
@@ -609,10 +614,12 @@
     </div>
 
     <script>
+        // 🆕 আপনার রিপোজিটরির মেইন পাথ থেকে moretv.m3u লোড করার লিংক যুক্ত করা হয়েছে
         const playlists = {
             bangladeshi: 'https://raw.githubusercontent.com/junaidthakur/PlayCast/main/bangladeshi.m3u',
             indian: 'media1.m3u',
-            sports: 'media2.m3u'
+            sports: 'media2.m3u',
+            more: 'https://raw.githubusercontent.com/junaidthakur/PlayCast/main/moretv.m3u'
         };
 
         let channelsList = [];
@@ -636,14 +643,14 @@
                 parseM3U(data);
             } catch (err) {
                 console.error("Error loading playlist:", err);
-                grid.innerHTML = "<p style='color:#ff2a5f; text-align:center; grid-column:1/-1; padding: 15px;'><i class='fa-solid fa-circle-exclamation'></i> প্লেলিস্ট লোড করতে সমস্যা হচ্ছে! গিটহাবের ফাইল বা ইন্টারনেট কানেকশন চেক করুন।</p>";
+                grid.innerHTML = "<p style='color:#ff2a5f; text-align:center; grid-column:1/-1; padding: 15px;'><i class='fa-solid fa-circle-exclamation'></i> প্লেলিস্ট লোড করতে সমস্যা হচ্ছে! ফাইল নাম বা ইন্টারনেট কানেকশন চেক করুন।</p>";
             }
         }
 
         function parseM3U(text) {
             const lines = text.split(/\r?\n/);
             let currentName = "";
-            let currentLogo = "https://via.placeholder.com/150x90?text=Live+TV";
+            let currentLogoUrl = "";
 
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i].trim();
@@ -651,7 +658,8 @@
 
                 if (line.toUpperCase().startsWith('#EXTINF:')) {
                     const logoMatch = line.match(/tvg-logo=["']([^"']*)["']/i);
-                    currentLogo = (logoMatch && logoMatch[1]) ? logoMatch[1] : "https://via.placeholder.com/150x90?text=Live+TV";
+                    // যদি লোগো থাকে তবে লিংকটি নেবে, না থাকলে ফাকা স্ট্রিং রাখবে
+                    currentLogoUrl = (logoMatch && logoMatch[1]) ? logoMatch[1].trim() : "";
                     
                     const commaIndex = line.lastIndexOf(',');
                     currentName = (commaIndex !== -1) ? line.substring(commaIndex + 1).trim() : "Live TV Channel";
@@ -661,12 +669,12 @@
                     
                     channelsList.push({
                         name: currentName,
-                        logo: currentLogo,
+                        logo: currentLogoUrl,
                         url: line
                     });
                     
                     currentName = "";
-                    currentLogo = "https://via.placeholder.com/150x90?text=Live+TV";
+                    currentLogoUrl = "";
                 }
             }
             
@@ -688,21 +696,32 @@
                 const card = document.createElement('div');
                 card.className = 'channel-card';
                 card.setAttribute('id', 'ch-' + realIndex);
-                
-                // 📺 রিমোট ও কিবোর্ড সিলেকশনের জন্য tabindex যোগ করা হয়েছে
                 card.setAttribute('tabindex', '0'); 
                 
                 card.onclick = () => playStream(realIndex); 
                 
-                // 📺 রিমোটে 'Enter/OK' বাটন চাপলে যাতে চ্যানেল প্লে হয় তার ফিক্স
                 card.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter' || e.keyCode === 13) {
                         playStream(realIndex);
                     }
                 });
+
+                // 🛠️ লোগো হ্যান্ডলিং ফিক্স: যদি লোগো লিংক ফাকা থাকে তবে সুন্দর প্লেসহোল্ডার জেনারেট করবে
+                let imageHtml = "";
+                if (ch.logo && ch.logo !== "") {
+                    imageHtml = `<img src="${ch.logo}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`;
+                }
+                
+                // লোগো না থাকলে বা এরর আসলে এই CSS আইকন লোগোটি ডিফেন্ডার হিসেবে ব্যাকগ্রাউন্ডে রেডি থাকবে
+                const fallbackLogoHtml = `
+                    <div class="fallback-logo" style="display: ${ch.logo ? 'none' : 'flex'}; width: 100%; height: 50px; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); border-radius: 6px; margin-bottom: 10px; color: var(--primary-glow); font-size: 20px;">
+                        <i class="fa-solid fa-tv"></i>
+                    </div>
+                `;
                 
                 card.innerHTML = `
-                    <img src="${ch.logo}" onerror="this.src='https://via.placeholder.com/150x90?text=${encodeURIComponent(ch.name)}'">
+                    ${imageHtml}
+                    ${fallbackLogoHtml}
                     <span>${ch.name}</span>
                 `;
                 grid.appendChild(card);
@@ -714,8 +733,17 @@
             if (!channel) return;
 
             currentTitle.innerText = channel.name;
-            currentLogo.src = channel.logo;
-            currentLogo.onerror = () => { currentLogo.src = 'https://via.placeholder.com/100x60?text=TV'; };
+            
+            // প্লেয়ার ইনফোবারের মেইন লোগো হ্যান্ডলিং
+            if (channel.logo && channel.logo !== "") {
+                currentLogo.src = channel.logo;
+                currentLogo.style.display = 'block';
+                currentLogo.onerror = () => { 
+                    currentLogo.src = 'https://via.placeholder.com/100x60?text=' + encodeURIComponent(channel.name); 
+                };
+            } else {
+                currentLogo.src = 'https://via.placeholder.com/100x60?text=' + encodeURIComponent(channel.name);
+            }
 
             document.querySelectorAll('.channel-card').forEach(c => c.classList.remove('active'));
             const activeCard = document.getElementById('ch-' + index);
@@ -732,25 +760,19 @@
             }
         }
 
-        // 📱 📺 নতুন এবং উন্নত ফুল-স্ক্রিন মোড (আইফ্রেম এবং PWA উভয় ক্ষেত্রে কাজ করবে)
         function toggleFullscreen() {
             const videoWrapper = document.querySelector('.video-player-wrapper');
             const videoElement = document.getElementById('videoPlayer');
 
-            // যদি অন্য কোনো সাইটের আইফ্রেমের ভেতরে থাকে, তবে বাইরের পেজকে ট্রিগার করবে
             if (window.parent && window.parent !== window) {
                 window.parent.postMessage('go_fullscreen', '*');
                 return;
             }
 
-            // সরাসরি ব্রাউজার বা PWA তে চললে এটি রান করবে
             if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement ) {  
-                
-                // iOS / Safari / iPhone এর জন্য ফিক্স
                 if (videoElement.webkitEnterFullscreen) { 
                     videoElement.webkitEnterFullscreen(); 
                 } 
-                // স্মার্ট টিভি, অ্যান্ড্রয়েড ও পিসির জন্য ফিক্স
                 else if (videoWrapper.requestFullscreen) { videoWrapper.requestFullscreen(); } 
                 else if (videoWrapper.webkitRequestFullscreen) { videoWrapper.webkitRequestFullscreen(); }
                 else if (videoWrapper.mozRequestFullScreen) { videoWrapper.mozRequestFullScreen(); } 
@@ -763,7 +785,6 @@
             }
         }
 
-        // রিমোটের Enter চেপে ফুলস্ক্রিন বাটনে ক্লিক করার জন্য লিসেনার
         document.querySelector('.fullscreen-btn').addEventListener('keydown', function(e) {
             if (e.key === 'Enter' || e.keyCode === 13) {
                 toggleFullscreen();
@@ -785,7 +806,6 @@
 
         window.onload = () => {
             loadPlaylist(playlists.bangladeshi);
-            // পেজ লোড হওয়া মাত্র প্রথম ট্যাবে অটো ফোকাস যাবে, যাতে টিভি রিমোট চালনা শুরু করা যায়
             const firstTab = document.getElementById('btn-bangladeshi');
             if(firstTab) firstTab.focus();
         };
