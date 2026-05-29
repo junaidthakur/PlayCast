@@ -46,7 +46,7 @@
             object-fit: cover !important; 
         }
 
-        /* ⬅️ শুধুমাত্র গোলাকার অ্যারো বাটন */
+        /* ⬅️ শুধুমাত্র অ্যারো বাটন (গোলাকার আইকন ডিজাইন) */
         .player-back-btn {
             position: absolute;
             top: 25px;
@@ -67,6 +67,7 @@
             justify-content: center;
         }
         
+        /* রিমোট ফোকাস হাইলাইট */
         .player-back-btn:focus {
             background: #e50914;
             border-color: #fff;
@@ -75,35 +76,10 @@
             box-shadow: 0 0 15px #e50914;
         }
 
-        /* ⏳ আধুনিক স্পিনার এবং লোডিং স্ক্রিন */
-        .loading-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 60px 20px;
-            text-align: center;
-        }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #1a1a1a;
-            border-top: 5px solid #e50914;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            box-shadow: 0 0 15px rgba(229, 9, 20, 0.4);
-            margin-bottom: 20px;
-        }
-
-        .loading-text {
-            color: #aaa;
-            font-size: 16px;
-            letter-spacing: 1px;
-            font-weight: 500;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-
+        /* ⏳ স্পিনার */
+        .loading-box { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #1a1a1a; border-top: 5px solid #e50914; border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px rgba(229, 9, 20, 0.4); margin-bottom: 20px; }
+        .loading-text { color: #aaa; font-size: 16px; letter-spacing: 1px; font-weight: 500; animation: pulse 1.5s ease-in-out infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; text-shadow: 0 0 10px rgba(255, 255, 255, 0.3); } }
     </style>
@@ -136,10 +112,10 @@
 
         let parsedData = {}; 
         let lastFocusedElement = null; 
+        let isPlaying = false; 
 
         async function initApp() {
             const container = document.getElementById('categoryContainer');
-            
             container.innerHTML = `
                 <div class="loading-box">
                     <div class="spinner"></div>
@@ -148,18 +124,13 @@
             `;
 
             for (let cat of categoriesData) {
-                if (!cat.url) {
-                    parsedData[cat.id] = [];
-                    continue;
-                }
+                if (!cat.url) { parsedData[cat.id] = []; continue; }
                 try {
                     const response = await fetch(cat.url);
                     if (response.ok) {
                         const m3uText = await response.text();
                         parsedData[cat.id] = parseM3U(m3uText);
-                    } else {
-                        parsedData[cat.id] = [];
-                    }
+                    } else { parsedData[cat.id] = []; }
                 } catch (e) {
                     console.log("Error loading " + cat.name, e);
                     parsedData[cat.id] = [];
@@ -171,30 +142,22 @@
         function parseM3U(data) {
             const lines = data.split('\n');
             const channels = [];
-            
             for (let i = 0; i < lines.length; i++) {
                 let line = lines[i].trim();
-                
                 if (line.startsWith('#EXTINF:')) {
                     const nameParts = line.split(',');
                     const channelName = nameParts[nameParts.length - 1].trim();
-                    
                     let nextLine = "";
                     let j = i + 1;
                     while (j < lines.length) {
                         let potentialLink = lines[j].trim();
                         if (potentialLink !== "") {
-                            if (!potentialLink.startsWith('#')) {
-                                nextLine = potentialLink;
-                            }
+                            if (!potentialLink.startsWith('#')) { nextLine = potentialLink; }
                             break;
                         }
                         j++;
                     }
-                    
-                    if (nextLine) {
-                        channels.push({ name: channelName, url: nextLine });
-                    }
+                    if (nextLine) { channels.push({ name: channelName, url: nextLine }); }
                 }
             }
             return channels;
@@ -206,7 +169,6 @@
             
             categoriesData.forEach((cat, index) => {
                 const totalChannels = parsedData[cat.id] ? parsedData[cat.id].length : 0;
-                
                 const catItem = document.createElement('button');
                 catItem.className = "category-item";
                 catItem.id = "cat-" + cat.id;
@@ -222,11 +184,6 @@
                 catItem.onclick = () => showChannels(cat.id, cat.name);
                 container.appendChild(catItem);
             });
-            
-            setTimeout(() => {
-                const firstBtn = container.querySelector('.category-item');
-                if(firstBtn) firstBtn.focus();
-            }, 50);
         }
 
         function showChannels(catId, catName) {
@@ -281,6 +238,7 @@
             const video = document.getElementById('videoPlayer');
             
             wrapper.style.display = 'block';
+            isPlaying = true;
             
             if (Hls.isSupported()) {
                 const hls = new Hls();
@@ -303,7 +261,6 @@
             else if (element.mozRequestFullScreen) { element.mozRequestFullScreen().then(lockLandscape); } 
             else if (element.msRequestFullscreen) { element.msRequestFullscreen(); setTimeout(lockLandscape, 200); }
             
-            // ভিডিও চালুর পর ফোকাস অটোমেটিক অ্যারো ব্যাক বাটনে চলে যাবে
             setTimeout(() => {
                 document.getElementById('playerBackBtn').focus();
             }, 400);
@@ -316,12 +273,15 @@
         }
 
         function closeVideoPlayer() {
+            if (!isPlaying) return;
+            
             const wrapper = document.getElementById('playerWrapper');
             const video = document.getElementById('videoPlayer');
             
             video.pause();
             video.src = ""; 
             wrapper.style.display = 'none';
+            isPlaying = false;
             
             if (document.fullscreenElement || document.webkitFullscreenElement) {
                 if (document.exitFullscreen) document.exitFullscreen();
@@ -330,13 +290,12 @@
 
             if (screen.orientation && screen.orientation.unlock) { screen.orientation.unlock(); }
 
-            // ভিডিও থেকে বের হওয়ার পর ঠিক আগের চ্যানেলে ফোকাস লক রাখা
             setTimeout(() => {
                 if (lastFocusedElement) {
                     lastFocusedElement.focus();
                     lastFocusedElement.scrollIntoView({ block: 'center' }); 
                 }
-            }, 100);
+            }, 150);
         }
 
         document.addEventListener('fullscreenchange', handleExitFullscreen);
@@ -346,16 +305,20 @@
 
         function handleExitFullscreen() {
             if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
-                closeVideoPlayer();
+                if(isPlaying) {
+                    closeVideoPlayer();
+                }
             }
         }
 
         document.addEventListener('keydown', function(event) {
             const active = document.activeElement;
 
-            if (document.getElementById('playerWrapper').style.display === 'block') {
+            if (isPlaying) {
+                // রিমোট বা কিবোর্ডের ব্যাক বাটন চাপলে প্লেয়ার বন্ধ হবে
                 if (event.key === 'Backspace' || event.key === 'Escape' || event.keyCode === 4) {
                     event.preventDefault();
+                    event.stopPropagation();
                     closeVideoPlayer();
                 }
                 if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
