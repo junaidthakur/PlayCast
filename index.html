@@ -246,7 +246,11 @@
             for (let cat of categoriesData) {
                 if (!cat.url) { parsedData[cat.id] = []; continue; }
                 try {
-                    const response = await fetch(cat.url);
+                    // 🔄 এখানে cache ও cors পলিসি ঠিক করা হয়েছে যেন লিঙ্ক ব্লক না হয় এবং চ্যানেল লোড হয়
+                    const response = await fetch(cat.url, {
+                        cache: "no-store",
+                        mode: "cors"
+                    });
                     if (response.ok) {
                         const m3uText = await response.text();
                         parsedData[cat.id] = parseM3U(m3uText);
