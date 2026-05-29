@@ -8,7 +8,7 @@
     <style>
         /* প্রিমিয়াম ডার্ক থিম UI */
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: #000; color: #fff; font-family: 'Segoe UI', Arial, sans-serif; padding: 15px; }
+        body { background-color: #000; color: #fff; font-family: 'Segoe UI', Arial, sans-serif; padding: 15px; padding-bottom: 75px !important; }
         
         .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 10px; font-size: 22px; font-weight: bold; border-bottom: 1px solid #222; }
         
@@ -82,6 +82,75 @@
         .loading-text { color: #aaa; font-size: 16px; letter-spacing: 1px; font-weight: 500; animation: pulse 1.5s ease-in-out infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; text-shadow: 0 0 10px rgba(255, 255, 255, 0.3); } }
+
+        /* 📱 অ্যাডস্টেরা স্টিকি ব্যানার স্টাইল (৩২০×৫০) */
+        .adsterra-sticky-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background-color: #000000;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.8);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* 📦 কাস্টম ওপেনিং পপ-আপ অ্যাড স্টাইল (৩০০×২৫০) */
+        .custom-ad-modal {
+            display: none; /* শুরুতে হাইড থাকবে */
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000000; /* একদম সবার উপরে থাকবে */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            position: relative;
+            background: #111;
+            padding: 25px 15px 15px 15px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
+            width: 330px;
+            height: 290px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* ❌ স্কিপ/ক্রস বাটন */
+        .close-ad-btn {
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            background: #e50914;
+            color: #fff;
+            border: 2px solid #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            z-index: 1000001;
+        }
+        .close-ad-btn:focus {
+            outline: none;
+            transform: scale(1.1);
+            background: #fff;
+            color: #000;
+        }
     </style>
 </head>
 <body>
@@ -98,6 +167,54 @@
         <button class="player-back-btn" id="playerBackBtn" onclick="closeVideoPlayer()">←</button>
         <video id="videoPlayer" controls playsinline></video>
     </div>
+
+    <div class="adsterra-sticky-banner" id="stickyAdContainer">
+        <script>
+          atOptions = {
+            'key' : '956cf9a7b847dea0265e9b7254b318a7',
+            'format' : 'iframe',
+            'height' : 50,
+            'width' : 320,
+            'params' : {}
+          };
+        </script>
+        <script src="https://www.highperformanceformat.com/956cf9a7b847dea0265e9b7254b318a7/invoke.js"></script>
+    </div>
+
+    <div class="custom-ad-modal" id="openingAdModal">
+        <div class="modal-content">
+            <button class="close-ad-btn" id="closeAdBtn" onclick="closeOpeningAd()" autofocus>×</button>
+            
+            <script>
+              atOptions = {
+                'key' : 'e036c434600078e3335aedb27d2b7d53',
+                'format' : 'iframe',
+                'height' : 250,
+                'width' : 300,
+                'params' : {}
+              };
+            </script>
+            <script src="https://www.highperformanceformat.com/e036c434600078e3335aedb27d2b7d53/invoke.js"></script>
+        </div>
+    </div>
+
+    <script>
+        // পপ-আপ বন্ধ করার ফাংশন
+        function closeOpeningAd() {
+            document.getElementById('openingAdModal').style.display = 'none';
+            // প্রথম ক্যাটাগরি আইটেমে ফোকাস ফিরিয়ে দেওয়া (Android TV/Remote এর জন্য সুবিধা)
+            const firstCat = document.querySelector('.category-item');
+            if(firstCat) firstCat.focus();
+        }
+
+        // পেজ লোড হওয়ার পর চেক করবে পপ-আপ আগে ওপেন হয়েছে কিনা
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!sessionStorage.getItem('opening_ad_shown')) {
+                document.getElementById('openingAdModal').style.display = 'flex';
+                sessionStorage.setItem('opening_ad_shown', 'true');
+            }
+        });
+    </script>
 
     <script>
         // GitHub ক্যাশ সমস্যা এড়ানোর জন্য টাইমস্ট্যাম্প
@@ -175,7 +292,6 @@
                 const catItem = document.createElement('button');
                 catItem.className = "category-item";
                 catItem.id = "cat-" + cat.id;
-                if(index === 0) catItem.setAttribute('autofocus', 'true'); 
                 
                 catItem.innerHTML = `
                     <span>${cat.name}</span>
@@ -240,6 +356,9 @@
             const wrapper = document.getElementById('playerWrapper');
             const video = document.getElementById('videoPlayer');
             
+            // 🛑 ভিডিও চালু হওয়ার সাথে সাথে নিচের ব্যানার অ্যাড হাইড করা হলো
+            document.getElementById('stickyAdContainer').style.display = 'none';
+
             wrapper.style.display = 'block';
             isPlaying = true;
             
@@ -286,6 +405,9 @@
             wrapper.style.display = 'none';
             isPlaying = false;
             
+            // 🔄 ভিডিও প্লেয়ার বন্ধ হলে নিচের ব্যানার অ্যাডটি আবার শো করবে
+            document.getElementById('stickyAdContainer').style.display = 'flex';
+
             if (document.fullscreenElement || document.webkitFullscreenElement) {
                 if (document.exitFullscreen) document.exitFullscreen();
                 else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
@@ -315,10 +437,18 @@
         }
 
         document.addEventListener('keydown', function(event) {
+            // যদি পপ-আপ ওপেন থাকে এবং ইউজার ব্যাক বাটন বা এন্টার চাপে, তবে পপ-আপ বন্ধ হবে
+            if (document.getElementById('openingAdModal').style.display === 'flex') {
+                if (event.key === 'Backspace' || event.key === 'Escape' || event.key === 'Enter' || event.keyCode === 4) {
+                    event.preventDefault();
+                    closeOpeningAd();
+                }
+                return;
+            }
+
             const active = document.activeElement;
 
             if (isPlaying) {
-                // রিমোট বা কিবোর্ডের ব্যাক বাটন চাপলে প্লেয়ার বন্ধ হবে
                 if (event.key === 'Backspace' || event.key === 'Escape' || event.keyCode === 4) {
                     event.preventDefault();
                     event.stopPropagation();
