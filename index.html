@@ -6,7 +6,7 @@
     <title>PlayCast - Premium IPTV Experience</title>
     
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json?v=1.0.2">
     <link class="pwa-icon" rel="apple-touch-icon" href="icon.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -42,7 +42,7 @@
 
         /* 📺 স্মার্ট টিভি রিমোট ফোকাস স্টাইল */
         .channel-card:focus, .tab-button:focus, .fullscreen-btn:focus, .search-input:focus {
-            outline: 4px solid #00E676 !important; /* রিমোট সিলেকশনে নিয়ন সবুজ বর্ডার দেখাবে */
+            outline: 4px solid #00E676 !important;
             outline-offset: 3px;
             transform: scale(1.06) !important;
             background: #1a1a3a !important;
@@ -468,8 +468,8 @@
             .navbar { padding: 10px 15px; }
             .brand-logo { font-size: 19px; }
             .tabs-and-search-container { flex-direction: column; align-items: stretch; }
-            .category-tabs { width: 100%; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
-            .tab-button { flex: 1; justify-content: center; padding: 10px 12px; font-size: 12px; }
+            .category-tabs { width: 100%; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; display: flex !important; }
+            .tab-button { flex: 1; justify-content: center; padding: 10px 14px; font-size: 12px; min-width: 120px; }
             .search-wrapper { max-width: 100%; }
             .channel-grid { grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 10px; }
             .channel-card { height: 105px; padding: 10px 6px; }
@@ -557,10 +557,11 @@
             </div>
         </div>
 
+        <!-- 🏷️ চার নম্বর ট্যাব বাটনটি এখানে নিশ্চিত করা হয়েছে -->
         <div class="tabs-and-search-container">
             <div class="category-tabs">
                 <button id="btn-bangladeshi" class="tab-button active" tabindex="0" onclick="switchPlaylist('bangladeshi')">
-                    <i class="fa-solid fa-flag"></i> বাংলাদেশী  টিভি
+                    <i class="fa-solid fa-flag"></i> বাংলাদেশী টিভি
                 </button>
                 <button id="btn-indian" class="tab-button" tabindex="0" onclick="switchPlaylist('indian')">
                     <i class="fa-solid fa-tv"></i> ইন্ডিয়ান টিভি
@@ -568,7 +569,6 @@
                 <button id="btn-sports" class="tab-button" tabindex="0" onclick="switchPlaylist('sports')">
                     <i class="fa-solid fa-trophy"></i> স্পোর্টস ও প্রিমিয়াম
                 </button>
-                <!-- 🆕 নতুন "More TV" ক্যাটাগরি বাটন যুক্ত করা হয়েছে -->
                 <button id="btn-more" class="tab-button" tabindex="0" onclick="switchPlaylist('more')">
                     <i class="fa-solid fa-circle-plus"></i> More TV
                 </button>
@@ -614,7 +614,7 @@
     </div>
 
     <script>
-        // 🆕 আপনার রিপোজিটরির মেইন পাথ থেকে moretv.m3u লোড করার লিংক যুক্ত করা হয়েছে
+        // 🛠️ ক্যাশ এড়াতে ফাইলের ইউআরএলের শেষে অটোমেটিক টাইমস্ট্যাম্প জেনারেট করার লজিক দেওয়া হয়েছে
         const playlists = {
             bangladeshi: 'https://raw.githubusercontent.com/junaidthakur/PlayCast/main/bangladeshi.m3u',
             indian: 'media1.m3u',
@@ -633,7 +633,8 @@
             grid.innerHTML = "<p style='text-align: center; grid-column: 1/-1; color: var(--text-muted); padding: 25px;'><i class='fa-solid fa-spinner fa-spin'></i> চ্যানেল লোড হচ্ছে...</p>";
             
             try {
-                const finalUrl = url + '?t=' + new Date().getTime();
+                // ব্রাউজার ক্যাশ বাইপাস করতে টাইমস্ট্যাম্প যোগ করা হলো
+                const finalUrl = url.includes('?') ? `${url}&t=${new Date().getTime()}` : `${url}?t=${new Date().getTime()}`;
                 const response = await fetch(finalUrl);
                 
                 if(!response.ok) throw new Error("HTTP error: " + response.status);
@@ -658,7 +659,6 @@
 
                 if (line.toUpperCase().startsWith('#EXTINF:')) {
                     const logoMatch = line.match(/tvg-logo=["']([^"']*)["']/i);
-                    // যদি লোগো থাকে তবে লিংকটি নেবে, না থাকলে ফাকা স্ট্রিং রাখবে
                     currentLogoUrl = (logoMatch && logoMatch[1]) ? logoMatch[1].trim() : "";
                     
                     const commaIndex = line.lastIndexOf(',');
@@ -706,13 +706,11 @@
                     }
                 });
 
-                // 🛠️ লোগো হ্যান্ডলিং ফিক্স: যদি লোগো লিংক ফাকা থাকে তবে সুন্দর প্লেসহোল্ডার জেনারেট করবে
                 let imageHtml = "";
                 if (ch.logo && ch.logo !== "") {
                     imageHtml = `<img src="${ch.logo}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`;
                 }
                 
-                // লোগো না থাকলে বা এরর আসলে এই CSS আইকন লোগোটি ডিফেন্ডার হিসেবে ব্যাকগ্রাউন্ডে রেডি থাকবে
                 const fallbackLogoHtml = `
                     <div class="fallback-logo" style="display: ${ch.logo ? 'none' : 'flex'}; width: 100%; height: 50px; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); border-radius: 6px; margin-bottom: 10px; color: var(--primary-glow); font-size: 20px;">
                         <i class="fa-solid fa-tv"></i>
@@ -734,7 +732,6 @@
 
             currentTitle.innerText = channel.name;
             
-            // প্লেয়ার ইনফোবারের মেইন লোগো হ্যান্ডলিং
             if (channel.logo && channel.logo !== "") {
                 currentLogo.src = channel.logo;
                 currentLogo.style.display = 'block';
@@ -812,11 +809,15 @@
     </script>
     
     <script>
+      // সার্ভিস ওয়ার্কারের ক্যাশ ওল্ড ডেটা ক্লিয়ার করার জন্য আপডেট ট্র্যাকার
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('sw.js')
-            .then(reg => console.log('Service Worker Registered Successfully!'))
-            .catch(err => console.log('Service Worker Setup Failed: ', err));
+          navigator.serviceWorker.register('sw.js?v=1.0.2')
+            .then(reg => {
+                console.log('Service Worker Updated!');
+                reg.update();
+            })
+            .catch(err => console.log('Service Worker Setup Error: ', err));
         });
       }
     </script>
